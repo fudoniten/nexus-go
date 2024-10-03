@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"flag"
 	"fmt"
+	"log"
 	"os"
 
 	"github.com/fudoniten/nexus-go/nexus"
@@ -17,9 +18,11 @@ func main() {
 	service := flag.String("service", "", "Service as which to identify with the server.")
 	secret := flag.String("secret", "", "Challenge secret to store at `host.domain`.")
 
+	log.SetOutput(os.Stdout)
+
 	flag.Parse()
 
-	fmt.Printf("domain: %v, host: %v, service: %v, secret: %v\n\n", *domain, *host, *service, *secret)
+	log.Printf("domain: %v, host: %v, service: %v, secret: %v\n\n", *domain, *host, *service, *secret)
 
 	encodedKey, err := os.ReadFile(*keyfile)
 	if err != nil {
@@ -43,13 +46,13 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	fmt.Printf("created challenge: %v", challenge_id)
+	log.Printf("created challenge: %v", challenge_id)
 
 	err = challenge.DeleteChallengeRecord(client, challenge_id)
 	if err != nil {
 		panic(err)
 	}
-	fmt.Printf("deleted challenge: %v", challenge_id)
+	log.Printf("deleted challenge: %v", challenge_id)
 
 	return
 }

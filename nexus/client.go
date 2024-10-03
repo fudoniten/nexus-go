@@ -6,6 +6,7 @@ import (
 	"math/rand"
 	"net"
 	"net/http"
+	"os"
 	"sort"
 	"time"
 )
@@ -92,6 +93,8 @@ func getTargetDomain(domain string) (target string, err error) {
 }
 
 func New(domain, service string, key []byte) (client *NexusClient, err error) {
+	log.SetOutput(os.Stdout)
+
 	server, err := getServer(domain)
 	if err != nil {
 		return
