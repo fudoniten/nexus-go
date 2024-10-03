@@ -1,4 +1,4 @@
-module github.com/fudoniten/nexus-go
+module github.com/fudoniten/nexus-go/v0.1.1
 
 go 1.22.6
 
