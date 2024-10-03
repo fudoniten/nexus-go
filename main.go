@@ -31,7 +31,6 @@ func main() {
 	}
 
 	client, err := nexus.New(
-		fmt.Sprintf("nexus.%v", *domain),
 		*domain,
 		*service,
 		key)
