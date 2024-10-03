@@ -88,12 +88,13 @@ func New(domain, service string, key []byte) (client *NexusClient, err error) {
 	if err != nil {
 		return
 	}
-	log.Printf("using server: %v", server)
+	log.Printf("client server: %v", server)
 	targetDomain, err := getTargetDomain(domain)
 	if err != nil {
 		return
 	}
-	log.Printf("using domain: %v", targetDomain)
+	log.Printf("client domain: %v", targetDomain)
+	log.Printf("client service: %v", service)
 	client = &NexusClient{
 		Server:  server,
 		Domain:  targetDomain,

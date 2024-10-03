@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log"
 	"net/http"
 	"time"
 
@@ -32,22 +33,24 @@ func sign(content string, key []byte) (sig string, err error) {
 }
 
 func CreateChallengeRecord(client *nexus.NexusClient, host string, secret string) (challenge_id uuid.UUID, err error) {
+	log.Printf("creating challenge request at host %v", host)
 	challenge_id = uuid.New()
 	endpoint := fmt.Sprintf("/api/v2/domain/%v/challenge/%v",
 		client.Domain,
 		challenge_id)
 	url := fmt.Sprintf("https://%v%v", client.Server, endpoint)
+	log.Printf("url: %v", url)
 	content := &bytes.Buffer{}
 	reqBody := NexusCreateChallengeReq{
 		Host:   host,
 		Secret: secret,
 	}
-	if json.NewEncoder(content).Encode(reqBody); err != nil {
+	if err = json.NewEncoder(content).Encode(reqBody); err != nil {
+		log.Printf("error: %v", err)
 		return
 	}
 	ts := time.Now().Unix()
 	sigstring := fmt.Sprintf("%v%v%v%v", "PUT", endpoint, ts, content)
-	fmt.Printf("%v\n\n", sigstring)
 	sig, err := sign(sigstring, client.Key)
 	if err != nil {
 		return
@@ -58,12 +61,14 @@ func CreateChallengeRecord(client *nexus.NexusClient, host string, secret string
 	req.Header.Set("Service", client.Service)
 	resp, err := client.Client.Do(req)
 	if err != nil {
+		log.Printf("error sending challenge: %v", err)
 		return
 	}
 	if resp.StatusCode != 200 {
 		err = errors.New(fmt.Sprintf("failed to create challange (%v)", resp.StatusCode))
 		return
 	}
+	log.Print("challenge successfully created")
 	return
 }
 
@@ -72,19 +77,25 @@ func DeleteChallengeRecord(client *nexus.NexusClient, challenge_id uuid.UUID) (e
 		client.Domain,
 		challenge_id)
 	url := fmt.Sprintf("https://%v%v", client.Server, endpoint)
+	log.Printf("deleting challenge record %v", challenge_id)
 	ts := time.Now().Unix()
 	sigstring := fmt.Sprintf("%v%v%v", "DELETE", endpoint, ts)
-	fmt.Printf("%v\n\n", sigstring)
 	sig, err := sign(sigstring, client.Key)
 	if err != nil {
+		log.Printf("error signing delete request: %v", err)
 		return
 	}
 	req, err := http.NewRequest("DELETE", url, nil)
+	if err != nil {
+		log.Printf("error creating delete request: %v", err)
+		return
+	}
 	req.Header.Set("Access-Signature", sig)
 	req.Header.Set("Access-Timestamp", fmt.Sprintf("%v", ts))
 	req.Header.Set("Service", client.Service)
 	resp, err := client.Client.Do(req)
 	if err != nil {
+		log.Printf("error sending delete request: %v", err)
 		return
 	}
 	if resp.StatusCode != 200 {
