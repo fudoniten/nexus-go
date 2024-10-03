@@ -2,6 +2,7 @@ package nexus
 
 import (
 	"fmt"
+	"log"
 	"math/rand"
 	"net"
 	"net/http"
@@ -87,10 +88,12 @@ func New(domain, service string, key []byte) (client *NexusClient, err error) {
 	if err != nil {
 		return
 	}
+	log.Printf("using server: %v", server)
 	targetDomain, err := getTargetDomain(domain)
 	if err != nil {
 		return
 	}
+	log.Printf("using domain: %v", targetDomain)
 	client = &NexusClient{
 		Server:  server,
 		Domain:  targetDomain,
