@@ -1,2 +1,4 @@
+github.com/fudoniten/nexus-go v0.0.0-20241003193051-45ba171b0911 h1:1Pk04kFcGA3EE8vVAB7jKETnQl3BmpXi0QpK7mlN7oM=
+github.com/fudoniten/nexus-go v0.0.0-20241003193051-45ba171b0911/go.mod h1:VWOpYbA9Y0ydrA3K8TRO6O9YhHrP7uUUa6xsAFz57EY=
 github.com/google/uuid v1.6.0 h1:NIvaJDMOsjHA8n1jAhLSgzrAzy1Hgr+hNrb57e+94F0=
 github.com/google/uuid v1.6.0/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+yHo=
