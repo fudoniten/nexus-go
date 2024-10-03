@@ -69,7 +69,8 @@ func getServer(domain string) (server string, err error) {
 }
 
 func getTargetDomain(domain string) (target string, err error) {
-	records, err := net.LookupTXT(domain)
+	targetRecord := fmt.Sprintf("_nexus-domain.%v", domain)
+	records, err := net.LookupTXT(targetRecord)
 	if err != nil {
 		return
 	}
