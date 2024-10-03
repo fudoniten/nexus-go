@@ -1,7 +1,6 @@
 package nexus
 
 import (
-	"errors"
 	"fmt"
 	"math/rand"
 	"net"
