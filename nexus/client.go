@@ -61,6 +61,7 @@ func getServer(domain string) (server string, err error) {
 	_, srvRecords, err := net.LookupSRV("nexus", "tcp", domain)
 	if err != nil {
 		log.Printf("error fetching SRV records: %v", err)
+		server = fmt.Sprintf("nexus.%v:443", domain)
 		return
 	}
 	if len(srvRecords) == 0 {
@@ -80,6 +81,7 @@ func getTargetDomain(domain string) (target string, err error) {
 	records, err := net.LookupTXT(targetRecord)
 	if err != nil {
 		log.Printf("error fetching challenge domain from TXT record: %v", err)
+		target = domain
 		return
 	}
 	if len(records) == 0 {
