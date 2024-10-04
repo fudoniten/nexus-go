@@ -58,10 +58,11 @@ func selectSrvRecord(records []*net.SRV) *net.SRV {
 
 func getServer(domain string) (server string, err error) {
 	log.Print("attempting to get server from domain SRV records")
-	_, srvRecords, err := net.LookupSRV("nexus", "tcp", domain)
-	if err != nil {
-		log.Printf("error fetching SRV records: %v", err)
+	_, srvRecords, lookupErr := net.LookupSRV("nexus", "tcp", domain)
+	if lookupErr != nil {
+		log.Printf("error fetching SRV records: %v", lookupErr)
 		server = fmt.Sprintf("nexus.%v:443", domain)
+		log.Printf("using default server: %v", server)
 		return
 	}
 	if len(srvRecords) == 0 {
@@ -78,10 +79,11 @@ func getServer(domain string) (server string, err error) {
 func getTargetDomain(domain string) (target string, err error) {
 	log.Print("attempting to get challenge domain from TXT record")
 	targetRecord := fmt.Sprintf("_nexus-domain.%v", domain)
-	records, err := net.LookupTXT(targetRecord)
-	if err != nil {
-		log.Printf("error fetching challenge domain from TXT record: %v", err)
+	records, lookupErr := net.LookupTXT(targetRecord)
+	if lookupErr != nil {
+		log.Printf("error fetching challenge domain from TXT record: %v", lookupErr)
 		target = domain
+		log.Printf("using default domain: %v", target)
 		return
 	}
 	if len(records) == 0 {
