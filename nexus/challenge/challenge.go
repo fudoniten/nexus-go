@@ -24,13 +24,6 @@ type NexusCreateChallengeReq struct {
 type NexusDeleteChallengeResp struct {
 }
 
-func sign(content string, key []byte) (sig string, err error) {
-	h := hmac.New(sha512.New, key)
-	h.Write([]byte(content))
-	sigbytes := h.Sum(nil)
-	sig = base64.StdEncoding.EncodeToString(sigbytes)
-	return
-}
 
 func CreateChallengeRecord(client *nexus.NexusClient, host string, secret string) (challenge_id uuid.UUID, err error) {
 	log.Printf("creating challenge request at host %v", host)
