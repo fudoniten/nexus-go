@@ -1,26 +1,5 @@
 package challenge
 
-import (
-	"bytes"
-	"encoding/json"
-	"errors"
-	"fmt"
-	"log"
-	"net/http"
-	"time"
-
-	"github.com/fudoniten/nexus-go/nexus"
-	"github.com/google/uuid"
-)
-
-type NexusCreateChallengeReq struct {
-	Host   string `json:"host"`
-	Secret string `json:"secret"`
-}
-
-type NexusDeleteChallengeResp struct {
-}
-
 
 import (
 	"bytes"
@@ -31,6 +10,9 @@ import (
 	"net/http"
 	"time"
 
+	"crypto/hmac"
+	"crypto/sha512"
+	"encoding/base64"
 	"github.com/fudoniten/nexus-go/nexus"
 	"github.com/google/uuid"
 )
@@ -124,71 +106,39 @@ func sign(content string, key []byte) (sig string, err error) {
 	return
 }
 
-func TestCreateChallengeRecord(t *testing.T) {
-	client := &nexus.NexusClient{
-		Server:  "example.com",
-		Domain:  "example.com",
-		Service: "example",
-		Key:     []byte("example"),
+	func TestCreateChallengeRecord(t *testing.T) {
+		client := &nexus.NexusClient{
+			Server:  "example.com",
+			Domain:  "example.com",
+			Service: "example",
+			Key:     []byte("example"),
+		}
+
+		host := "example.com"
+		secret := "example"
+
+		challengeID, err := CreateChallengeRecord(client, host, secret)
+		if err != nil {
+			t.Errorf("CreateChallengeRecord returned error: %v", err)
+		}
+
+		if challengeID == uuid.Nil {
+			t.Error("CreateChallengeRecord returned nil challenge ID")
+		}
 	}
 
-	host := "example.com"
-	secret := "example"
+	func TestDeleteChallengeRecord(t *testing.T) {
+		client := &nexus.NexusClient{
+			Server:  "example.com",
+			Domain:  "example.com", 
+			Service: "example",
+			Key:     []byte("example"),
+		}
 
-	challengeID, err := CreateChallengeRecord(client, host, secret)
-	if err != nil {
-		t.Errorf("CreateChallengeRecord returned error: %v", err)
+		challengeID := uuid.New()
+
+		err := DeleteChallengeRecord(client, challengeID)
+		if err != nil {
+			t.Errorf("DeleteChallengeRecord returned error: %v", err)
+		}
 	}
-
-	if challengeID == uuid.Nil {
-		t.Error("CreateChallengeRecord returned nil challenge ID")
-	}
-}
-
-func TestDeleteChallengeRecord(t *testing.T) {
-	client := &nexus.NexusClient{
-		Server:  "example.com",
-		Domain:  "example.com", 
-		Service: "example",
-		Key:     []byte("example"),
-	}
-
-	challengeID := uuid.New()
-
-	err := DeleteChallengeRecord(client, challengeID)
-	if err != nil {
-		t.Errorf("DeleteChallengeRecord returned error: %v", err)
-	}
-}
-package nexus
-
-import (
-	"testing"
-)
-
-func TestNew(t *testing.T) {
-	domain := "example.com"
-	service := "example" 
-	key := []byte("example")
-
-	client, err := New(domain, service, key)
-	if err != nil {
-		t.Errorf("New returned error: %v", err)
-	}
-
-	if client == nil {
-		t.Error("New returned nil client")
-	}
-
-	if client.Domain != domain {
-		t.Errorf("Expected domain %q, got %q", domain, client.Domain)
-	}
-
-	if client.Service != service {
-		t.Errorf("Expected service %q, got %q", service, client.Service) 
-	}
-
-	if string(client.Key) != string(key) {
-		t.Errorf("Expected key %q, got %q", string(key), string(client.Key))
-	}
-}
