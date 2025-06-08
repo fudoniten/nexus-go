@@ -22,6 +22,27 @@ type NexusDeleteChallengeResp struct {
 }
 
 
+import (
+	"bytes"
+	"encoding/json"
+	"errors"
+	"fmt"
+	"log"
+	"net/http"
+	"time"
+
+	"github.com/fudoniten/nexus-go/nexus"
+	"github.com/google/uuid"
+)
+
+type NexusCreateChallengeReq struct {
+	Host   string `json:"host"`
+	Secret string `json:"secret"`
+}
+
+type NexusDeleteChallengeResp struct {
+}
+
 func CreateChallengeRecord(client *nexus.NexusClient, host string, secret string) (challenge_id uuid.UUID, err error) {
 	log.Printf("creating challenge request at host %v", host)
 	challenge_id = uuid.New()
@@ -94,15 +115,6 @@ func DeleteChallengeRecord(client *nexus.NexusClient, challenge_id uuid.UUID) (e
 	}
 	return
 }
-package nexus
-
-import (
-)
-
-package nexus
-
-import (
-)
 
 func sign(content string, key []byte) (sig string, err error) {
 	h := hmac.New(sha512.New, key)
@@ -111,14 +123,6 @@ func sign(content string, key []byte) (sig string, err error) {
 	sig = base64.StdEncoding.EncodeToString(sigbytes)
 	return
 }
-package challenge
-
-import (
-	"testing"
-
-	"github.com/fudoniten/nexus-go/nexus"
-	"github.com/google/uuid"
-)
 
 func TestCreateChallengeRecord(t *testing.T) {
 	client := &nexus.NexusClient{
