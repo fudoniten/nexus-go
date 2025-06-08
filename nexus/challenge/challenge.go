@@ -13,6 +13,7 @@ import (
 	"crypto/hmac"
 	"crypto/sha512"
 	"encoding/base64"
+	"testing"
 	"github.com/fudoniten/nexus-go/nexus"
 	"github.com/google/uuid"
 )
