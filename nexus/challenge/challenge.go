@@ -23,10 +23,8 @@ type NexusCreateChallengeReq struct {
 	Secret string `json:"secret"`
 }
 
-type NexusDeleteChallengeResp struct {
-}
 
-func CreateChallengeRecord(client *nexus.NexusClient, host string, secret string) (challenge_id uuid.UUID, err error) {
+func CreateChallengeRecord(client *nexus.NexusClient, host string, secret string) (uuid.UUID, error) {
 	log.Printf("creating challenge request at host %v", host)
 	challenge_id = uuid.New()
 	endpoint := fmt.Sprintf("/api/v2/domain/%v/challenge/%v",
@@ -39,10 +37,10 @@ func CreateChallengeRecord(client *nexus.NexusClient, host string, secret string
 		Host:   host,
 		Secret: secret,
 	}
-	if err = json.NewEncoder(content).Encode(reqBody); err != nil {
+	if err := json.NewEncoder(content).Encode(reqBody); err != nil {
 		log.Printf("error: %v", err)
-		return
-	}
+		return uuid.Nil, err
+	}  
 	ts := time.Now().Unix()
 	sigstring := fmt.Sprintf("%v%v%v%v", "PUT", endpoint, ts, content)
 	sig, err := sign(sigstring, client.Key)
@@ -66,7 +64,7 @@ func CreateChallengeRecord(client *nexus.NexusClient, host string, secret string
 	return
 }
 
-func DeleteChallengeRecord(client *nexus.NexusClient, challenge_id uuid.UUID) (err error) {
+func DeleteChallengeRecord(client *nexus.NexusClient, challenge_id uuid.UUID) error {
 	endpoint := fmt.Sprintf("/api/v2/domain/%v/challenge/%v",
 		client.Domain,
 		challenge_id)
