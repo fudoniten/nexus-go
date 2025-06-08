@@ -56,7 +56,7 @@ func selectSrvRecord(records []*net.SRV) *net.SRV {
 	return nil
 }
 
-func getServer(domain string) (server string, err error) {
+func getServerFromSRV(domain string) (server string, err error) {
 	log.Print("attempting to get server from domain SRV records")
 	_, srvRecords, lookupErr := net.LookupSRV("nexus", "tcp", domain)
 	if lookupErr != nil {
@@ -76,7 +76,7 @@ func getServer(domain string) (server string, err error) {
 	return
 }
 
-func getTargetDomain(domain string) (target string, err error) {
+func getChallengeDomainFromTXT(domain string) (target string, err error) {
 	log.Print("attempting to get challenge domain from TXT record")
 	targetRecord := fmt.Sprintf("_nexus-domain.%v", domain)
 	records, lookupErr := net.LookupTXT(targetRecord)
@@ -99,12 +99,12 @@ func getTargetDomain(domain string) (target string, err error) {
 func New(domain, service string, key []byte) (client *NexusClient, err error) {
 	log.SetOutput(os.Stdout)
 
-	server, err := getServer(domain)
+	server, err := getServerFromSRV(domain)
 	if err != nil {
 		return
 	}
 	log.Printf("client server: %v", server)
-	targetDomain, err := getTargetDomain(domain)
+	targetDomain, err := getChallengeDomainFromTXT(domain)
 	if err != nil {
 		return
 	}
