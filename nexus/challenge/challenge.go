@@ -2,9 +2,6 @@ package challenge
 
 import (
 	"bytes"
-	"crypto/hmac"
-	"crypto/sha512"
-	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -58,7 +55,7 @@ func CreateChallengeRecord(client *nexus.NexusClient, host string, secret string
 		return
 	}
 	if resp.StatusCode != 200 {
-		err = errors.New(fmt.Sprintf("failed to create challange (%v)", resp.StatusCode))
+		err = fmt.Errorf("failed to create challenge (status code %v)", resp.StatusCode)
 		return
 	}
 	log.Print("challenge successfully created")
@@ -112,3 +109,8 @@ func DeleteChallengeRecord(client *nexus.NexusClient, challenge_id uuid.UUID) (e
         sig = base64.StdEncoding.EncodeToString(sigbytes)
         return
       }
+package nexus
+
+import (
+)
+
