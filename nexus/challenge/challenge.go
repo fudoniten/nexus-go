@@ -77,7 +77,7 @@ func DeleteChallengeRecord(client *nexus.NexusClient, challenge_id uuid.UUID) (e
 		client.Domain,
 		challenge_id)
 	url := fmt.Sprintf("https://%v%v", client.Server, endpoint)
-	log.Printf("deleting challenge record %v", challenge_id)
+	log.Printf("deleting challenge record %v\n", challenge_id)
 	ts := time.Now().Unix()
 	sigstring := fmt.Sprintf("%v%v%v", "DELETE", endpoint, ts)
 	sig, err := sign(sigstring, client.Key)
@@ -87,7 +87,7 @@ func DeleteChallengeRecord(client *nexus.NexusClient, challenge_id uuid.UUID) (e
 	}
 	req, err := http.NewRequest("DELETE", url, nil)
 	if err != nil {
-		log.Printf("error creating delete request: %v", err)
+		log.Printf("error creating delete request: %v\n", err)
 		return
 	}
 	req.Header.Set("Access-Signature", sig)
@@ -95,11 +95,11 @@ func DeleteChallengeRecord(client *nexus.NexusClient, challenge_id uuid.UUID) (e
 	req.Header.Set("Service", client.Service)
 	resp, err := client.Client.Do(req)
 	if err != nil {
-		log.Printf("error sending delete request: %v", err)
+		log.Printf("error sending delete request: %v\n", err)
 		return
 	}
 	if resp.StatusCode != 200 {
-		err = errors.New(fmt.Sprintf("failed to delete challange (%v)", resp.StatusCode))
+		err = errors.New(fmt.Sprintf("failed to delete challange (%v)\n", resp.StatusCode))
 		return
 	}
 	return
