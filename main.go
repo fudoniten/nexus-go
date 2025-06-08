@@ -11,16 +11,24 @@ import (
 	"github.com/fudoniten/nexus-go/nexus/challenge"
 )
 
+func parseFlags() (keyfile, domain, host, service, secret *string) {
+	keyfile = flag.String("key", "", "Path at which to find signing key.")
+	domain = flag.String("domain", "", "Domain to be challenged.")
+	host = flag.String("host", "", "Hostname to be targeted by the challenge.")
+	service = flag.String("service", "", "Service as which to identify with the server.")
+	secret = flag.String("secret", "", "Challenge secret to store at `host.domain`.")
+	flag.Parse()
+	return
+}
+
+func createClient(domain, service *string, key []byte) (*nexus.NexusClient, error) {
+	return nexus.New(*domain, *service, key)
+}
+
 func main() {
-	keyfile := flag.String("key", "", "Path at which to find signing key.")
-	domain := flag.String("domain", "", "Domain to be challenged.")
-	host := flag.String("host", "", "Hostname to be targeted by the challenge.")
-	service := flag.String("service", "", "Service as which to identify with the server.")
-	secret := flag.String("secret", "", "Challenge secret to store at `host.domain`.")
+	keyfile, domain, host, service, secret := parseFlags()
 
 	log.SetOutput(os.Stdout)
-
-	flag.Parse()
 
 	log.Printf("domain: %v, host: %v, service: %v, secret: %v\n\n", *domain, *host, *service, *secret)
 
@@ -33,11 +41,7 @@ func main() {
 		panic(err)
 	}
 
-	client, err := nexus.New(
-		*domain,
-		*service,
-		key)
-
+	client, err := createClient(domain, service, key)
 	if err != nil {
 		panic(err)
 	}
