@@ -53,12 +53,14 @@ func CreateChallengeRecord(client *nexus.NexusClient, host string, secret string
 	req.Header.Set("Service", client.Service)
 	resp, err := client.Client.Do(req)
 	if err != nil {
-		log.Printf("error sending challenge: %v", err)
-		return
+		err = fmt.Errorf("error sending challenge: %w", err)
+		log.Println(err)
+		return uuid.Nil, err
 	}
 	if resp.StatusCode != 200 {
 		err = fmt.Errorf("failed to create challenge (status code %v)", resp.StatusCode)
-		return
+		log.Println(err)
+		return uuid.Nil, err
 	}
 	log.Print("challenge successfully created")
 	return
@@ -74,25 +76,29 @@ func DeleteChallengeRecord(client *nexus.NexusClient, challenge_id uuid.UUID) er
 	sigstring := fmt.Sprintf("%v%v%v", "DELETE", endpoint, ts)
 	sig, err := sign(sigstring, client.Key)
 	if err != nil {
-		log.Printf("error signing delete request: %v", err)
-		return
+		err = fmt.Errorf("error signing delete request: %w", err)
+		log.Println(err)
+		return err
 	}
 	req, err := http.NewRequest("DELETE", url, nil)
 	if err != nil {
-		log.Printf("error creating delete request: %v\n", err)
-		return
+		err = fmt.Errorf("error creating delete request: %w", err)
+		log.Println(err)
+		return err
 	}
 	req.Header.Set("Access-Signature", sig)
 	req.Header.Set("Access-Timestamp", fmt.Sprintf("%v", ts))
 	req.Header.Set("Service", client.Service)
 	resp, err := client.Client.Do(req)
 	if err != nil {
-		log.Printf("error sending delete request: %v\n", err)
-		return
+		err = fmt.Errorf("error sending delete request: %w", err)
+		log.Println(err)
+		return err
 	}
 	if resp.StatusCode != 200 {
-		err = errors.New(fmt.Sprintf("failed to delete challange (%v)\n", resp.StatusCode))
-		return
+		err = fmt.Errorf("failed to delete challenge (status code %v)", resp.StatusCode)
+		log.Println(err)
+		return err
 	}
 	return
 }
