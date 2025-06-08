@@ -121,3 +121,11 @@ func New(domain, service string, key []byte) (client *NexusClient, err error) {
 	}
 	return
 }
+      func sign(content string, key []byte) (sig string, err error) {
+        h := hmac.New(sha512.New, key)
+        h.Write([]byte(content))
+        sigbytes := h.Sum(nil)
+        sig = base64.StdEncoding.EncodeToString(sigbytes)
+        return
+      }
+      

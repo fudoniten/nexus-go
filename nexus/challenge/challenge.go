@@ -104,3 +104,18 @@ func DeleteChallengeRecord(client *nexus.NexusClient, challenge_id uuid.UUID) (e
 	}
 	return
 }
+      package nexus
+      
+      import (
+        "crypto/hmac"
+        "crypto/sha512"
+        "encoding/base64"
+      )
+      
+      func sign(content string, key []byte) (sig string, err error) {
+        h := hmac.New(sha512.New, key)
+        h.Write([]byte(content))
+        sigbytes := h.Sum(nil)
+        sig = base64.StdEncoding.EncodeToString(sigbytes)
+        return
+      }
