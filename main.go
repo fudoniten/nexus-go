@@ -48,7 +48,8 @@ func main() {
 
 	challenge_id, err := challenge.CreateChallengeRecord(client, *host, *secret)
 	if err != nil {
-		panic(err)
+		log.Printf("Failed to create challenge: %v", err)
+		os.Exit(1)
 	}
 	log.Printf("created challenge: %v", challenge_id)
 
