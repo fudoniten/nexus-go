@@ -38,9 +38,10 @@ func CreateChallengeRecord(client *nexus.NexusClient, host string, secret string
 		Secret: secret,
 	}
 	if err := json.NewEncoder(content).Encode(reqBody); err != nil {
-		log.Printf("error: %v", err)
+		err = fmt.Errorf("error encoding request body: %w", err)
+		log.Println(err)
 		return uuid.Nil, err
-	}  
+	}
 	ts := time.Now().Unix()
 	sigstring := fmt.Sprintf("%v%v%v%v", "PUT", endpoint, ts, content)
 	sig, err := sign(sigstring, client.Key)
