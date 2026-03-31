@@ -4,7 +4,6 @@ package challenge
 import (
 	"bytes"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -13,7 +12,6 @@ import (
 	"crypto/hmac"
 	"crypto/sha512"
 	"encoding/base64"
-	"testing"
 	"github.com/fudoniten/nexus-go/nexus"
 	"github.com/google/uuid"
 )
@@ -26,7 +24,7 @@ type NexusCreateChallengeReq struct {
 
 func CreateChallengeRecord(client *nexus.NexusClient, host string, secret string) (uuid.UUID, error) {
 	log.Printf("creating challenge request at host %v", host)
-	challenge_id = uuid.New()
+	challenge_id := uuid.New()
 	endpoint := fmt.Sprintf("/api/v2/domain/%v/challenge/%v",
 		client.Domain,
 		challenge_id)
@@ -46,7 +44,7 @@ func CreateChallengeRecord(client *nexus.NexusClient, host string, secret string
 	sigstring := fmt.Sprintf("%v%v%v%v", "PUT", endpoint, ts, content)
 	sig, err := sign(sigstring, client.Key)
 	if err != nil {
-		return
+		return uuid.Nil, err
 	}
 	req, err := http.NewRequest("PUT", url, content)
 	req.Header.Set("Content-Type", "application/json")
@@ -65,7 +63,7 @@ func CreateChallengeRecord(client *nexus.NexusClient, host string, secret string
 		return uuid.Nil, err
 	}
 	log.Print("challenge successfully created")
-	return
+	return challenge_id, nil
 }
 
 func DeleteChallengeRecord(client *nexus.NexusClient, challenge_id uuid.UUID) error {
@@ -102,7 +100,7 @@ func DeleteChallengeRecord(client *nexus.NexusClient, challenge_id uuid.UUID) er
 		log.Println(err)
 		return err
 	}
-	return
+	return nil
 }
 
 func sign(content string, key []byte) (sig string, err error) {
@@ -112,40 +110,3 @@ func sign(content string, key []byte) (sig string, err error) {
 	sig = base64.StdEncoding.EncodeToString(sigbytes)
 	return
 }
-
-	func TestCreateChallengeRecord(t *testing.T) {
-		client := &nexus.NexusClient{
-			Server:  "example.com",
-			Domain:  "example.com",
-			Service: "example",
-			Key:     []byte("example"),
-		}
-
-		host := "example.com"
-		secret := "example"
-
-		challengeID, err := CreateChallengeRecord(client, host, secret)
-		if err != nil {
-			t.Errorf("CreateChallengeRecord returned error: %v", err)
-		}
-
-		if challengeID == uuid.Nil {
-			t.Error("CreateChallengeRecord returned nil challenge ID")
-		}
-	}
-
-	func TestDeleteChallengeRecord(t *testing.T) {
-		client := &nexus.NexusClient{
-			Server:  "example.com",
-			Domain:  "example.com", 
-			Service: "example",
-			Key:     []byte("example"),
-		}
-
-		challengeID := uuid.New()
-
-		err := DeleteChallengeRecord(client, challengeID)
-		if err != nil {
-			t.Errorf("DeleteChallengeRecord returned error: %v", err)
-		}
-	}
