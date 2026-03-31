@@ -49,6 +49,7 @@ func CreateChallengeRecord(client *nexus.NexusClient, host string, secret string
 		return
 	}
 	req, err := http.NewRequest("PUT", url, content)
+	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Access-Signature", sig)
 	req.Header.Set("Access-Timestamp", fmt.Sprintf("%v", ts))
 	req.Header.Set("Service", client.Service)
