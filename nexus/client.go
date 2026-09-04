@@ -15,8 +15,25 @@ type NexusClient struct {
 	Server  string
 	Domain  string
 	Service string
-	Key     []byte
+	Signer  Signer
 	Client  *http.Client
+}
+
+// APIVersion reports which version of the Nexus API this client talks to,
+// which is determined by the kind of key it signs with.
+func (c *NexusClient) APIVersion() APIVersion {
+	return c.Signer.APIVersion()
+}
+
+// Endpoint builds a request path rooted at the API version this client
+// speaks, so callers never have to hardcode /api/v2 or /api/v3.
+func (c *NexusClient) Endpoint(format string, args ...any) string {
+	return fmt.Sprintf("/api/%v", c.APIVersion()) + fmt.Sprintf(format, args...)
+}
+
+// Sign returns the Access-Signature value for a canonical request string.
+func (c *NexusClient) Sign(content string) (string, error) {
+	return c.Signer.Sign(content)
 }
 
 func selectSrvRecord(records []*net.SRV) *net.SRV {
@@ -119,7 +136,17 @@ func getChallengeDomainFromTXT(domain string) (target string, err error) {
 	return
 }
 
+// New creates a client that authenticates with a shared HMAC secret against
+// the legacy /api/v2 API. New clients should prefer NewWithSigner, which also
+// accepts an Ed25519 key for the public-key /api/v3 API.
 func New(domain, service string, key []byte) (client *NexusClient, err error) {
+	return NewWithSigner(domain, service, NewHMACSigner(key))
+}
+
+// NewWithSigner creates a client that authenticates with the given signer.
+// The signer decides both how requests are signed and which API version they
+// are sent to.
+func NewWithSigner(domain, service string, signer Signer) (client *NexusClient, err error) {
 	log.SetOutput(os.Stdout)
 
 	server, err := getServerFromSRV(domain)
@@ -133,11 +160,12 @@ func New(domain, service string, key []byte) (client *NexusClient, err error) {
 	}
 	log.Printf("client domain: %v", targetDomain)
 	log.Printf("client service: %v", service)
+	log.Printf("client api version: %v", signer.APIVersion())
 	client = &NexusClient{
 		Server:  server,
 		Domain:  targetDomain,
 		Service: service,
-		Key:     key,
+		Signer:  signer,
 		Client: &http.Client{
 			Timeout: 20 * time.Second,
 		},

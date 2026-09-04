@@ -1,6 +1,5 @@
 package challenge
 
-
 import (
 	"bytes"
 	"encoding/json"
@@ -9,9 +8,6 @@ import (
 	"net/http"
 	"time"
 
-	"crypto/hmac"
-	"crypto/sha512"
-	"encoding/base64"
 	"github.com/fudoniten/nexus-go/nexus"
 	"github.com/google/uuid"
 )
@@ -21,11 +17,10 @@ type NexusCreateChallengeReq struct {
 	Secret string `json:"secret"`
 }
 
-
 func CreateChallengeRecord(client *nexus.NexusClient, host string, secret string) (uuid.UUID, error) {
 	log.Printf("creating challenge request at host %v", host)
 	challenge_id := uuid.New()
-	endpoint := fmt.Sprintf("/api/v2/domain/%v/challenge/%v",
+	endpoint := client.Endpoint("/domain/%v/challenge/%v",
 		client.Domain,
 		challenge_id)
 	url := fmt.Sprintf("https://%v%v", client.Server, endpoint)
@@ -42,11 +37,18 @@ func CreateChallengeRecord(client *nexus.NexusClient, host string, secret string
 	}
 	ts := time.Now().Unix()
 	sigstring := fmt.Sprintf("%v%v%v%v", "PUT", endpoint, ts, content)
-	sig, err := sign(sigstring, client.Key)
+	sig, err := client.Sign(sigstring)
 	if err != nil {
+		err = fmt.Errorf("error signing challenge request: %w", err)
+		log.Println(err)
 		return uuid.Nil, err
 	}
 	req, err := http.NewRequest("PUT", url, content)
+	if err != nil {
+		err = fmt.Errorf("error creating challenge request: %w", err)
+		log.Println(err)
+		return uuid.Nil, err
+	}
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Access-Signature", sig)
 	req.Header.Set("Access-Timestamp", fmt.Sprintf("%v", ts))
@@ -57,6 +59,7 @@ func CreateChallengeRecord(client *nexus.NexusClient, host string, secret string
 		log.Println(err)
 		return uuid.Nil, err
 	}
+	defer resp.Body.Close()
 	if resp.StatusCode != 200 {
 		err = fmt.Errorf("failed to create challenge (status code %v)", resp.StatusCode)
 		log.Println(err)
@@ -67,14 +70,14 @@ func CreateChallengeRecord(client *nexus.NexusClient, host string, secret string
 }
 
 func DeleteChallengeRecord(client *nexus.NexusClient, challenge_id uuid.UUID) error {
-	endpoint := fmt.Sprintf("/api/v2/domain/%v/challenge/%v",
+	endpoint := client.Endpoint("/domain/%v/challenge/%v",
 		client.Domain,
 		challenge_id)
 	url := fmt.Sprintf("https://%v%v", client.Server, endpoint)
 	log.Printf("deleting challenge record %v\n", challenge_id)
 	ts := time.Now().Unix()
 	sigstring := fmt.Sprintf("%v%v%v", "DELETE", endpoint, ts)
-	sig, err := sign(sigstring, client.Key)
+	sig, err := client.Sign(sigstring)
 	if err != nil {
 		err = fmt.Errorf("error signing delete request: %w", err)
 		log.Println(err)
@@ -95,18 +98,11 @@ func DeleteChallengeRecord(client *nexus.NexusClient, challenge_id uuid.UUID) er
 		log.Println(err)
 		return err
 	}
+	defer resp.Body.Close()
 	if resp.StatusCode != 200 {
 		err = fmt.Errorf("failed to delete challenge (status code %v)", resp.StatusCode)
 		log.Println(err)
 		return err
 	}
 	return nil
-}
-
-func sign(content string, key []byte) (sig string, err error) {
-	h := hmac.New(sha512.New, key)
-	h.Write([]byte(content))
-	sigbytes := h.Sum(nil)
-	sig = base64.StdEncoding.EncodeToString(sigbytes)
-	return
 }
